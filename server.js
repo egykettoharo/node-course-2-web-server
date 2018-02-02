@@ -13,7 +13,6 @@ app.use((req, res, next) => {
   var now = new Date().toString();
   var log = `${now}: ${req.method} ${req.url}`;
 
-  console.log(log);
   fs.appendFile('server.log', log + '\n', (err) => {
     if (err) {
       console.log('Unable to append to server.log.');
@@ -56,6 +55,30 @@ app.get('/projects', (req, res) => {
   });
 });
 
+app.get('/hello_world', (req, res) => {
+  res.status(200).send('Hello world!');
+});
+
+app.get('/hello_world_404', (req, res) => {
+  res.status(404).send({
+    error: 'Page not found',
+    name: 'Todo App v1.0'
+  });
+});
+
+app.get('/users', (req, res) => {
+  res.send([
+    {
+      name: 'Jani',
+      age: 13
+    },
+    {
+      name: 'Béla',
+      age: 15
+    }
+  ]);
+});
+
 // /bad - send back json with errorMessage
 app.get('/bad', (req, res) => {
   res.send({
@@ -66,3 +89,6 @@ app.get('/bad', (req, res) => {
 app.listen(port, () => {
   console.log('Server is up on port ' + port);
 });
+
+
+module.exports.app = app;
