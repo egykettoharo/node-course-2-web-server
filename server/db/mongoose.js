@@ -2,8 +2,10 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+const url = process.env.MONGODB_URI || 'mongodb://localhost:27017/TodoApp';
+
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost:27017/TodoApp');
+mongoose.connect(url);
 
 module.exports = {
     mongoose
