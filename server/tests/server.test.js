@@ -8,15 +8,19 @@ const {Todo}    = require('./../models/todo');
 const todos = [
     {
         _id: new ObjectID(),
-        text: 'First test todo'
+        text: 'First test todo',
+        completed: false
     },
     {
         _id: new ObjectID(),
-        text: 'Second test todo'
+        text: 'Second test todo',
+        completed: true,
+        completedAt: 333
     },
     {
         _id: new ObjectID(),
-        text: 'Third test todo'
+        text: 'Third test todo',
+        completed: false
     }
 ]
 
@@ -151,6 +155,62 @@ describe('DELETE /todos/:id', () => {
     it('should get an 404 error code', (done) => {
         request(app)
             .delete('/todos/asdsadsa')
+            .expect(404)
+            .end(done);
+    });
+});
+
+describe('PATCH /todos/:id', () => {
+   it('should update an todo', (done) => {
+       request(app)
+        .patch('/todos/' + todos[0]._id.toHexString())
+        .send({
+            completed: true
+        })
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todo.completed).toBe(true);
+        })
+        .end(done);
+   });
+
+   it('should update an todo remove completed flag', (done) => {
+       request(app)
+        .patch('/todos/' + todos[1]._id.toHexString())
+        .send({
+            completed: false
+        })
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todo.completed).toBe(false);
+        })
+        .end((err, res) => {
+            if (err) {
+                return done();
+            }
+
+            Todo.findById(todos[1]._id.toHexString()).then((res) => {
+                expect(res.completedAt).toNotExist();
+                done();
+            }).catch((e) => {
+                done(e);
+            });
+
+
+        });
+   });
+
+   it('should get an 404 error code', (done) => {
+       var id = new ObjectID().toHexString();
+       request(app)
+        .patch('/todos/' + id)
+        .expect(404)
+        .end(done);
+   });
+
+    it('should get an 404 error code', (done) => {
+        request(app)
+            .patch('/todos/asdsadsa')
             .expect(404)
             .end(done);
     });
