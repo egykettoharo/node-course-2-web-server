@@ -16,6 +16,7 @@ describe('Post /todos', () => {
 
        request(app)
         .post('/todos')
+        .set('x-auth', users[0].tokens[0].token)
         .send({
             text
         })
@@ -43,6 +44,7 @@ describe('Post /todos', () => {
 
        request(app)
         .post('/todos')
+        .set('x-auth', users[0].tokens[0].token)
         .send({
             text
         })
@@ -66,9 +68,10 @@ describe('GET /todos', () => {
    it('should get all todos', (done) => {
        request(app)
         .get('/todos')
+        .set('x-auth', users[0].tokens[0].token)
         .expect(200)
         .expect((res) => {
-            expect(res.body.todos.length).toBe(3);
+            expect(res.body.todos.length).toBe(2);
         })
         .end(done);
    });
@@ -78,6 +81,7 @@ describe('GET /todos/:id', () => {
    it('should get an todo', (done) => {
        request(app)
         .get('/todos/' + todos[0]._id.toHexString())
+        .set('x-auth', users[0].tokens[0].token)
         .expect(200)
         .expect((res) => {
             expect(res.body.todo.text).toBe(todos[0].text);
@@ -85,10 +89,19 @@ describe('GET /todos/:id', () => {
         .end(done);
    });
 
+   it('should not get an todo', (done) => {
+       request(app)
+        .get('/todos/' + todos[1]._id.toHexString())
+        .set('x-auth', users[0].tokens[0].token)
+        .expect(404)
+        .end(done);
+   });
+
    it('should get an 404 error code', (done) => {
        var id = new ObjectID().toHexString();
        request(app)
         .get('/todos/' + id)
+        .set('x-auth', users[0].tokens[0].token)
         .expect(404)
         .end(done);
    });
@@ -96,6 +109,7 @@ describe('GET /todos/:id', () => {
     it('should get an 404 error code', (done) => {
         request(app)
             .get('/todos/asdsadsa')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .end(done);
     });
@@ -104,35 +118,45 @@ describe('GET /todos/:id', () => {
 describe('DELETE /todos/:id', () => {
    it('should remove an todo', (done) => {
        request(app)
-        .delete('/todos/' + todos[1]._id.toHexString())
-        .expect(200)
-        .expect((res) => {
-            expect(res.body.todo.text).toBe(todos[1].text);
-        })
-        .end((err, res) => {
-            if (err) {
-                return done();
-            }
-            Todo.findById(todos[1]._id.toHexString()).then((res) => {
-                expect(res).toNotExist();
-                done();
-            }).catch((e) => {
-                done(e);
+            .delete('/todos/' + todos[1]._id.toHexString())
+            .set('x-auth', users[1].tokens[0].token)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(todos[1].text);
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done();
+                }
+                Todo.findById(todos[1]._id.toHexString()).then((res) => {
+                    expect(res).toNotExist();
+                    done();
+                }).catch((e) => {
+                    done(e);
+                });
             });
-        });
+   });
+   it('should not remove an todo', (done) => {
+       request(app)
+            .delete('/todos/' + todos[0]._id.toHexString())
+            .set('x-auth', users[1].tokens[0].token)
+            .expect(404)
+            .end(done);
    });
 
    it('should get an 404 error code', (done) => {
        var id = new ObjectID().toHexString();
        request(app)
-        .delete('/todos/' + id)
-        .expect(404)
-        .end(done);
+            .delete('/todos/' + id)
+            .set('x-auth', users[1].tokens[0].token)
+            .expect(404)
+            .end(done);
    });
 
     it('should get an 404 error code', (done) => {
         request(app)
             .delete('/todos/asdsadsa')
+            .set('x-auth', users[1].tokens[0].token)
             .expect(404)
             .end(done);
     });
@@ -142,6 +166,7 @@ describe('PATCH /todos/:id', () => {
    it('should update an todo', (done) => {
        request(app)
         .patch('/todos/' + todos[0]._id.toHexString())
+        .set('x-auth', users[0].tokens[0].token)
         .send({
             completed: true
         })
@@ -151,10 +176,21 @@ describe('PATCH /todos/:id', () => {
         })
         .end(done);
    });
+   it('should not update an todo', (done) => {
+       request(app)
+        .patch('/todos/' + todos[1]._id.toHexString())
+        .set('x-auth', users[0].tokens[0].token)
+        .send({
+            completed: true
+        })
+        .expect(404)
+        .end(done);
+   });
 
    it('should update an todo remove completed flag', (done) => {
        request(app)
         .patch('/todos/' + todos[1]._id.toHexString())
+        .set('x-auth', users[0].tokens[0].token)
         .send({
             completed: false
         })
@@ -182,6 +218,7 @@ describe('PATCH /todos/:id', () => {
        var id = new ObjectID().toHexString();
        request(app)
         .patch('/todos/' + id)
+           .set('x-auth', users[0].tokens[0].token)
         .expect(404)
         .end(done);
    });
@@ -189,6 +226,7 @@ describe('PATCH /todos/:id', () => {
     it('should get an 404 error code', (done) => {
         request(app)
             .patch('/todos/asdsadsa')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .end(done);
     });
@@ -288,7 +326,7 @@ describe('POST /users/login', () => {
                 }
 
                 User.findById(users[1]._id).then((user) => {
-                    expect(user.tokens[0]).toInclude({
+                    expect(user.tokens[1]).toInclude({
                         access: 'auth',
                         token:  res.headers['x-auth']
                     });
@@ -314,7 +352,7 @@ describe('POST /users/login', () => {
                 }
 
                 User.findById(users[1]._id).then((user) => {
-                    expect(user.tokens[0]).toNotExist();
+                    expect(user.tokens.length).toBe(1);
                     done();
                 }).catch((e) => done(e));
 
